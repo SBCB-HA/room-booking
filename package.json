@@ -1,0 +1,36 @@
+{
+  "name": "room-booking",
+  "version": "1.0.0",
+  "description": "TypeScript Core & Node Runtime training: Room Booking",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "check": "tsc --noEmit",
+    "reset": "node scripts/reset.mjs",
+    "demo:js": "node demos/js-basics.js",
+    "demo:bug": "node demos/bug.js",
+    "demo:booking": "tsx src/demo/booking.ts",
+    "demo:private": "tsx src/demo/private.ts",
+    "lab:thread": "tsx src/lab/one-thread.ts",
+    "lab:wait": "tsx src/lab/no-wait.ts",
+    "lab:queue": "tsx src/lab/queue.ts",
+    "lab:parallel": "tsx src/lab/parallel.ts",
+    "lab:promise": "tsx src/lab/promise.ts",
+    "lab:pending": "tsx src/lab/pending.ts",
+    "lab:await": "tsx src/lab/await.ts",
+    "lab:fail": "tsx src/lab/fail.ts",
+    "lab:nocatch": "tsx src/lab/no-catcher.ts",
+    "lab:order": "tsx src/lab/order.ts"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

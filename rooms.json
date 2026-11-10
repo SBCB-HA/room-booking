@@ -1,0 +1,5 @@
+[
+  {"id": "Sky", "pricePerHour": 200000},
+  {"id": "Ocean", "pricePerHour": 150000},
+  {"id": "Forest", "pricePerHour": 300000}
+]

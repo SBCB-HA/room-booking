@@ -1,0 +1,7 @@
+[
+  {"id": "bk1", "room": "Sky", "customer": "Liam", "date": "2026-11-12", "start": 9, "hours": 2, "status": "CONFIRMED"},
+  {"id": "bk2", "room": "Sky", "customer": "Minh", "date": "2026-11-12", "start": 10, "hours": 2, "status": "CONFIRMED"},
+  {"id": "bk3", "room": "Ocean", "customer": "Lan", "date": "2026-11-12", "start": 13, "hours": 1, "status": "PENDING"},
+  {"id": "bk4", "room": "Forest", "customer": "Huy", "date": "2026-11-12", "start": 14, "hours": 3, "status": "CONFIRMED"},
+  {"id": "bk5", "room": "Ocean", "customer": "An", "date": "2026-11-12", "start": 15, "hours": 1, "status": "CANCELLED"}
+]
