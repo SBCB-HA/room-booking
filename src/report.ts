@@ -25,6 +25,11 @@ function clashWith(b: Booking, all: Booking[]): Booking | undefined {
   return earlier.find((o) => o.status !== Status.Cancelled && overlaps(o, b));
 }
 
+
+
+export function hasConflict(newBooking: Booking, all: Booking[]): boolean {
+  return all.some((other) => other.status !== Status.Cancelled && overlaps(other, newBooking));
+}
 function mark(status: Status): string {
   switch (status) {
     case Status.Confirmed:
@@ -35,6 +40,7 @@ function mark(status: Status): string {
       return "✖";
   }
 }
+
 
 export function printReport(bookings: Booking[], rooms: Room[]): void {
   const lines = bookings.map((b) => {
