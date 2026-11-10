@@ -128,3 +128,11 @@ git push origin homework/<your-name>
 ```
 
 Open a Pull Request titled `[Homework] <Full name>` and list the creative challenges you chose.
+
+### Think: answers
+
+1. TypeScript checks the program's source code, but `JSON.parse()` reads untrusted JSON at runtime and returns a value without validating its shape. The `as Booking[]` assertion in the loader only tells the compiler to trust that value; it does not convert the string `"9"` into the number `9`. JavaScript then evaluates `9 + 2` as the string `"92"`, which explains the displayed `09:00-92:00`. I would validate parsed JSON at the storage boundary with a type guard or schema: require `start` and `hours` to be integers in the allowed range, and reject or report invalid records before using them.
+
+2. The overlap check scans bookings with array methods such as `some()` (and reporting can scan again for each booking). With one million bookings, these linear scans do many comparisons; checking each booking against the whole list can become O(n²). V8 is executing the JavaScript callbacks and comparisons on its event-loop thread. The work is CPU-bound, so it blocks that thread until the scans finish; `some()` can stop early when it finds a conflict, but a no-conflict scan visits the full list. An index keyed by room and date, or an interval structure, would reduce the candidates that need checking.
+
+3. Each terminal loads its own copy of the JSON file. Both can see the slot as free, accept the booking, and then write their separate in-memory arrays to the same file. The last write wins, so one booking may overwrite the other; both users may have been told their booking succeeded. The check and save are not atomic across processes. To prevent this reliably, use a shared database with a transaction and a uniqueness/locking rule for overlapping reservations (or another cross-process locking mechanism), rather than a JSON file.
