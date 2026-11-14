@@ -1,101 +1,107 @@
-# Room Booking · TypeScript Core & Node Runtime
+# Room Booking CLI
 
-A small app for managing meeting room bookings. It reads the rooms and bookings from JSON files,
-prices each booking by the hour, adds up the revenue from confirmed bookings,
-warns about overlapping bookings, and lets you add a booking from the command line.
-This is the app we open up piece by piece during the training session.
+A TypeScript command-line app for booking meeting rooms. It stores rooms and bookings in JSON files, rejects new overlapping bookings, supports confirmations and cancellations, and reports availability and revenue.
 
-Step-by-step setup guide: [SETUP.md](SETUP.md).
+## Start from a fresh checkout
+
+Requirements: Node.js 20 or newer, Git.
+
+```bash
+git clone https://github.com/SBCB-HA/room-booking.git
+cd room-booking
+git checkout homework/hoanganh
+npm install
+npm run check
+npm run dev
+```
+
+`npm run dev` launches the interactive TypeScript CLI. To compile and run the JavaScript build instead:
+
+```bash
+npm run build
+npm start
+```
+
+Reset the booking data to the original sample before repeating the examples:
+
+```bash
+npm run reset
+```
+
+## Commands
+
+Type `help` in the running app for the command list.
+
+| Command | What it does |
+| --- | --- |
+| `list <date>` | Shows bookings and confirmed revenue for a date |
+| `book <customer> <room> <date> <start> <hours>` | Adds a pending booking if the room is free |
+| `confirm <id>` | Confirms a pending booking |
+| `cancel <id>` | Cancels a booking and frees its time |
+| `available <room> <date>` | Lists free hours |
+| `suggest <room> <date> <start> <hours>` | Finds the free start time nearest to the requested hour |
+| `revenue <date>` | Shows confirmed revenue for a date |
+| `exit` | Quits the app |
+
+Dates use `YYYY-MM-DD`; start and duration are whole hours. A booking that overlaps any pending or confirmed booking in the same room and date is rejected. Cancelled bookings do not block the time. Invalid input prints a clear error and returns to the prompt.
+
+## Try it
+
+The original sample data intentionally contains a pre-existing Sky overlap between Liam (09:00–11:00) and Minh (10:00–12:00). The CLI reports that legacy conflict in `list`; it rejects any new booking that overlaps either one.
+
+Example session with the original sample data:
 
 ```text
-$ npm start -- Trang Ocean 16 2
-+ Booked: Ocean 16:00-18:00 for Trang
-Saved 6 bookings to bookings.json
-Bookings for 2026-11-12 (6)
-  ✔ 09:00-11:00  Sky    Liam   400,000 VND
-  ✔ 10:00-12:00  Sky    Minh   400,000 VND  ⚠ overlaps Liam
-  ○ 13:00-14:00  Ocean  Lan    150,000 VND
-  ✔ 14:00-17:00  Forest Huy    900,000 VND
-  ✖ 15:00-16:00  Ocean  An     150,000 VND
-  ✔ 16:00-18:00  Ocean  Trang  300,000 VND
-Revenue (confirmed): 2,000,000 VND
-⚠ 1 conflict(s) found
+> revenue 2026-11-12
+Revenue on 2026-11-12: 2,000,000 VND
+> available Sky 2026-11-12
+00:00, 01:00, 02:00, 03:00, 04:00, 05:00, 06:00, 07:00, 08:00, 12:00, 13:00, 14:00, 15:00, 16:00, 17:00, 18:00, 19:00, 20:00, 21:00, 22:00, 23:00
+> book Test Sky 2026-11-12 10 1
+Error: Room is already booked
+> suggest Sky 2026-11-12 10 1
+Nearest free slot: 12:00-13:00
+> book Test Sky 2026-11-12 12 1
+✔ Booked bk_<timestamp>
+> book Test Unknown 2026-11-12 20 1
+Error: Invalid room name
+> book Test Sky 2026-11-12 23 2
+Error: Invalid time range
+> confirm bk999
+Error: No booking with id "bk999"
 ```
 
-`✔` confirmed · `○` pending · `✖` cancelled.
+The booking ID contains the current timestamp, so its exact value changes. After creating it, use the printed ID with `confirm <id>` or `cancel <id>`. The prompt remains available after each input error. Use `cancel bk2` to cancel Minh's legacy booking and remove the original overlap warning. Run `npm run reset` to restore the sample data.
 
-## Requirements
+## Code map
 
-- Node.js LTS (20 or newer)
-- Git
-
-## Install and run
-
-```bash
-npm install
-npm run dev        # run the .ts files directly (while coding)
-npm run check      # type-check only, no output files
-npm run build      # compile .ts → .js into dist/
-npm start          # run the compiled app
-npm run reset      # put bookings.json back to the 5 original bookings
-```
-
-Add a booking from the command line (customer, room, start hour, hours):
-
-```bash
-npm start -- Trang Ocean 16 2
-npm start -- Khoa Sky 9 1      # overlaps Liam: the app still books it, it only warns
-```
-
-For now the app only **warns** about overlapping bookings; it doesn't **block** them. That's the homework. Run `npm run reset` to go back to the original data.
-
-## Structure
-
-| File | Role |
+| File | Responsibility |
 | --- | --- |
-| `src/models.ts` | Describes the data: `Booking`, `Room`, `RoomName`, `Status` |
-| `src/repository.ts` | Data store: `Repository<T>`, used for both `Room` and `Booking` |
-| `src/report.ts` | Prices, revenue (filter → map → reduce), overlap detection |
-| `src/storage.ts` | Reads two files in parallel with `Promise.all`, writes with `async/await` |
-| `src/main.ts` | Entry point |
-| `src/demo/` | TypeScript demos (slides 9–11) |
-| `src/lab/` | Node demos (slides 16–23) |
-| `demos/` | JavaScript demos (`js-basics.js`, `bug.js`) |
-| `rooms.json`, `bookings.json` | Data; `data/bookings.seed.json` is the original copy |
-| `scripts/reset.mjs` | Resets the data |
+| `src/models.ts` | Booking, room, and status types |
+| `src/repository.ts` | Generic in-memory repository with private data, add, update, remove, and lookup |
+| `src/storage.ts` | Async JSON file access and runtime type guards for loaded room/booking data |
+| `src/report.ts` | Formatting, pricing, overlap detection, and report output |
+| `src/cli.ts` | Interactive commands, input validation, booking rules, and nearest-slot suggestion |
+| `rooms.json`, `bookings.json` | Persistent data files |
 
+The list and revenue reports use `filter`, `map`, and `reduce`. File operations use `node:fs/promises` and `await`. TypeScript strict mode is enabled.
 
-## Homework: Booking Manager
+## Creative challenges implemented
 
-Turn the app into a booking program that keeps running and takes commands from the user.
+1. **Suggest the nearest free slot.** The `suggest` command checks valid start hours ordered by distance from the requested start and returns the closest slot that does not overlap an active booking.
+2. **Validate JSON with type guards.** Files are parsed as `unknown`; each room and booking is checked before the value is treated as a TypeScript type. Invalid records, including a string value such as `"start": "9"`, produce a clear data error instead of being used in time calculations.
 
-**Must have**
+## Think: design notes
 
-- Commands: `help`, `list <date>`, `book`, `confirm <id>`, `cancel <id>`, `available <room> <date>`, `revenue <date>`, `exit`
-- **Reject double bookings**: don't allow a booking that overlaps a non-cancelled booking of the same room
-- `Repository<T>` gets `update` and `remove`; the data stays `private`
-- Revenue and lists use array methods, no `for` loops
-- Read and write files with `fs/promises` and `await`, no `*Sync` functions
-- Bad input (invalid hour, unknown room, wrong id): a clear error message, and the program keeps running
-- `strict` on, no `any`, sensible modules
+1. **Why did `"start": "9"` display `09:00-92:00` without a TypeScript error?** `JSON.parse` returns runtime data and does not validate its shape. A type assertion such as `as Booking[]` only silences the compiler; it does not convert the string to a number. JavaScript then evaluates `"9" + 2` as `"92"`. The storage type guards now reject that record when loading the file.
+2. **What gets slow with one million bookings?** A direct overlap check scans the booking array in O(n). The report also searches earlier bookings for each displayed booking, so generating a full report can take O(n²) comparisons. V8 executes those synchronous callbacks and comparisons on the event-loop thread; the CPU work blocks other CLI input until it finishes. An index by room and date would reduce the number of candidates.
+3. **What if two terminals book and save at once?** Each process has its own in-memory copy. Both can see a free slot and accept it, then each writes a full JSON snapshot. The last write can overwrite the other booking, even though both terminals reported success. A JSON file has no cross-process transaction; a shared database transaction or lock is needed to prevent this race.
 
-Hint: look at `node:readline/promises`. `rl.question()` returns a Promise.
+## Submission
 
-**Creative:** pick at least 2 challenges, or propose your own, and explain your design in the README:
-peak-hour pricing, weekly repeating bookings, a waitlist when a room is full, suggesting the nearest free slot,
-daily room usage stats, exporting the schedule to Markdown/CSV, validating the JSON data with a type guard.
+Commit and push the homework branch, then open a Pull Request titled `[Homework] <Full name>`. In its description, list the two creative challenges above.
 
-**Think, answer in the README:**
-
-1. Change `"start": 9` in `bookings.json` to `"9"` and the app prints `09:00-92:00`, with no TypeScript error. Why? How would you handle it?
-2. With 1 million bookings, where is the overlap check slow? What is V8 doing at that moment?
-3. Two terminals book the same room, at the same time, and save the file at the same moment. What happens?
-
-
-### Think: answers
-
-1. TypeScript checks the program's source code, but `JSON.parse()` reads untrusted JSON at runtime and returns a value without validating its shape. The `as Booking[]` assertion in the loader only tells the compiler to trust that value; it does not convert the string `"9"` into the number `9`. JavaScript then evaluates `9 + 2` as the string `"92"`, which explains the displayed `09:00-92:00`. I would validate parsed JSON at the storage boundary with a type guard or schema: require `start` and `hours` to be integers in the allowed range, and reject or report invalid records before using them.
-
-2. The overlap check scans bookings with array methods such as `some()` (and reporting can scan again for each booking). With one million bookings, these linear scans do many comparisons; checking each booking against the whole list can become O(n²). V8 is executing the JavaScript callbacks and comparisons on its event-loop thread. The work is CPU-bound, so it blocks that thread until the scans finish; `some()` can stop early when it finds a conflict, but a no-conflict scan visits the full list. An index keyed by room and date, or an interval structure, would reduce the candidates that need checking.
-
-3. Each terminal loads its own copy of the JSON file. Both can see the slot as free, accept the booking, and then write their separate in-memory arrays to the same file. The last write wins, so one booking may overwrite the other; both users may have been told their booking succeeded. The check and save are not atomic across processes. To prevent this reliably, use a shared database with a transaction and a uniqueness/locking rule for overlapping reservations (or another cross-process locking mechanism), rather than a JSON file.
+```bash
+git add .
+git commit -m "Document booking CLI homework"
+git push
+```
